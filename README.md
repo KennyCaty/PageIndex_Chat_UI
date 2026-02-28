@@ -14,15 +14,22 @@
 
 ---
 
+
 ## 简介
 
 PageIndex Chat UI 是一个基于 [PageIndex](https://github.com/VectifyAI/PageIndex) 开源项目实现的文档问答系统，提供了友好的 Web 聊天界面。本项目采用**无向量 RAG** 技术，通过树状结构推理检索替代传统的向量相似度匹配，实现更精准的文档问答。
+
+## 界面展示
+
+![PageIndex Chat UI 界面示例](./image/example.png)
+
 
 ### 核心理念
 
 > **相似度 ≠ 相关性**
 
 传统 RAG 系统依赖向量相似度进行检索，但语义相似的片段未必是回答问题所需的上下文。PageIndex 采用类似 AlphaGo 的树搜索算法，让 LLM 像人类一样"思考"并导航文档结构，精准定位答案来源。
+
 
 ## 特性
 
