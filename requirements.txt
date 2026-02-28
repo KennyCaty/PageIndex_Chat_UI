@@ -1,0 +1,12 @@
+Flask==3.0.0
+Flask-CORS==4.0.0
+Flask-SocketIO==5.3.6
+python-socketio==5.10.0
+python-engineio==4.8.0
+openai>=1.0.0
+tiktoken>=0.5.0
+PyPDF2>=3.0.0
+pymupdf>=1.23.0
+python-dotenv>=1.0.0
+PyYAML>=6.0
+Werkzeug>=3.0.0

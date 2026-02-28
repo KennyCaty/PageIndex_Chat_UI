@@ -1,0 +1,23 @@
+[project]
+name = "pageindex-chat-ui"
+version = "1.0.0"
+description = "A chat interface for PDF document QA with PageIndex RAG support"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "Flask>=3.0.0",
+    "Flask-CORS>=4.0.0",
+    "Flask-SocketIO>=5.3.6",
+    "python-socketio>=5.10.0",
+    "python-engineio>=4.8.0",
+    "openai>=1.0.0",
+    "tiktoken>=0.5.0",
+    "PyPDF2>=3.0.0",
+    "pymupdf>=1.23.0",
+    "python-dotenv>=1.0.0",
+    "PyYAML>=6.0",
+    "Werkzeug>=3.0.0",
+]
+
+[tool.uv]
+dev-dependencies = []

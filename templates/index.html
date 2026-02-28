@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PageIndex Chat UI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #7c3aed;
+            --bg-color: #f8fafc;
+            --sidebar-bg: #1e1b4b;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #312e81 100%);
+            color: white;
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-header {
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h4 {
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .document-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .document-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .document-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+        }
+
+        .doc-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .doc-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .doc-item.active {
+            background: rgba(99, 102, 241, 0.3);
+            border-color: #818cf8;
+        }
+
+        .doc-item .doc-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .doc-item .doc-status {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .doc-item .doc-actions {
+            display: none;
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .doc-item:hover .doc-actions {
+            display: flex;
+        }
+
+        .doc-item.error .doc-actions {
+            display: flex;
+        }
+
+        .doc-action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .doc-action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .doc-action-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .doc-action-btn.retry {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+        }
+
+        .doc-action-btn.retry:hover {
+            background: rgba(34, 197, 94, 0.3);
+            color: #bbf7d0;
+        }
+
+        .status-badge {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-ready {
+            background: #22c55e;
+        }
+
+        .status-pending {
+            background: #f59e0b;
+        }
+
+        .status-indexing {
+            background: #3b82f6;
+            animation: pulse 1s infinite;
+        }
+
+        .status-error {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: auto;
+        }
+
+        .upload-area:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .upload-area i {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .main-content {
+            margin-left: 280px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: margin-right 0.3s ease;
+        }
+
+        .main-content.preview-open {
+            margin-right: 500px;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .model-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .model-toggle {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 4px;
+        }
+
+        .model-toggle button {
+            border: none;
+            background: transparent;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+        }
+
+        .model-toggle button.active {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-btn {
+            background: transparent;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .settings-btn:hover {
+            background: #f1f5f9;
+            color: var(--primary-color);
+        }
+
+        .memory-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .chat-messages {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 0;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message-user .message-content {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+            padding: 12px 18px;
+            max-width: 70%;
+        }
+
+        .message-assistant .message-content {
+            background: white;
+            border-radius: 18px 18px 18px 4px;
+            padding: 15px 20px;
+            max-width: 80%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .thinking-box {
+            background: #f8fafc;
+            border-left: 3px solid var(--primary-color);
+            padding: 12px 15px;
+            margin-bottom: 12px;
+            border-radius: 0 8px 8px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .thinking-box strong {
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .nodes-box {
+            background: #ecfdf5;
+            border-left: 3px solid #22c55e;
+            padding: 10px 15px;
+            margin-bottom: 12px;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 18px;
+            width: fit-content;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .typing-indicator .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .input-area {
+            background: white;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            border: 2px solid var(--border-color);
+            border-radius: 15px;
+            padding: 15px 20px;
+            font-size: 15px;
+            resize: none;
+            min-height: 50px;
+            max-height: 200px;
+            transition: border-color 0.2s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Modal styles */
+        .modal-content {
+            border: none;
+            border-radius: 16px;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 25px;
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 15px;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h5 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .clear-history-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .clear-history-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Node tag styles */
+        .node-tag {
+            display: inline-block;
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 2px;
+        }
+
+        .node-tag:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(129, 140, 248, 0.4);
+        }
+
+        /* Page preview sidebar styles */
+        .page-preview-modal {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 500px;
+            height: 100%;
+            z-index: 10000;
+            display: none;
+            background: white;
+            flex-direction: column;
+            box-shadow: -4px 0 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .page-preview-modal.active {
+            display: flex;
+            animation: sidebarSlideIn 0.3s ease;
+        }
+
+        .page-preview-overlay {
+            display: none;
+        }
+
+        .page-preview-content {
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes sidebarSlideIn {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .page-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-preview-title {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .page-preview-close {
+            background: transparent;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .page-preview-close:hover {
+            background: #f1f5f9;
+            color: var(--text-primary);
+        }
+
+        .page-preview-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .page-preview-images {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .page-image-container {
+            position: relative;
+            text-align: center;
+        }
+
+        .page-preview-image {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .page-preview-image:hover {
+            transform: scale(1.02);
+        }
+
+        .page-number {
+            margin-top: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .no-pages {
+            padding: 40px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .page-preview-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .page-preview-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-nav-btn {
+            background: #f1f5f9;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .page-nav-btn:hover:not(:disabled) {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .page-nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .page-indicator {
+            font-weight: 500;
+            color: var(--text-primary);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* Fullscreen image overlay */
+        .fullscreen-image-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10001;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .fullscreen-image {
+            max-width: 95vw;
+            max-height: 95vh;
+            object-fit: contain;
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .fullscreen-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h4>
+                <div class="logo-icon">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+                PageIndex Chat
+            </h4>
+        </div>
+
+        <div class="document-list" id="documentList">
+            <!-- Documents will be loaded here -->
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <i class="bi bi-cloud-upload"></i>
+            <div>上传 PDF 文档</div>
+            <small style="color: rgba(255,255,255,0.5);">点击或拖拽文件</small>
+        </div>
+        <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="model-selector">
+                <div class="model-toggle">
+                    <button id="textModelBtn" class="active" type="button">
+                        <i class="bi bi-chat-text"></i> 文本模型
+                    </button>
+                    <button id="visionModelBtn" type="button">
+                        <i class="bi bi-eye"></i> 视觉模型
+                    </button>
+                </div>
+                <button class="settings-btn" id="settingsBtn" type="button">
+                    <i class="bi bi-gear"></i>
+                </button>
+            </div>
+
+            <div class="memory-toggle">
+                <input type="checkbox" id="memoryToggle" checked>
+                <label for="memoryToggle">启用对话记忆</label>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-messages" id="chatMessages">
+                <div class="empty-state" id="emptyState">
+                    <i class="bi bi-chat-dots"></i>
+                    <h5>选择或上传文档开始对话</h5>
+                    <p>上传 PDF 文档后，即可进行智能问答</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea class="chat-input" id="chatInput" placeholder="输入您的问题..." rows="1"></textarea>
+                </div>
+                <button class="send-btn" id="sendBtn" type="button">
+                    <i class="bi bi-send"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">模型配置</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs mb-3" id="modelTabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#textConfig" data-bs-toggle="tab">文本模型</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#visionConfig" data-bs-toggle="tab">视觉模型</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="textConfig">
+                            <div class="mb-3">
+                                <label class="form-label">模型名称</label>
+                                <input type="text" class="form-control" id="textModelName"
+                                    placeholder="例如: gpt-4o-mini">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">API Key</label>
+                                <input type="password" class="form-control" id="textApiKey" placeholder="sk-...">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Base URL</label>
+                                <input type="text" class="form-control" id="textBaseUrl"
+                                    placeholder="https://api.openai.com/v1">
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="visionConfig">
+                            <div class="mb-3">
+                                <label class="form-label">模型名称</label>
+                                <input type="text" class="form-control" id="visionModelName" placeholder="例如: gpt-4.1">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">API Key</label>
+                                <input type="password" class="form-control" id="visionApiKey" placeholder="sk-...">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Base URL</label>
+                                <input type="text" class="form-control" id="visionBaseUrl"
+                                    placeholder="https://api.openai.com/v1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveSettingsBtn">保存配置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>
