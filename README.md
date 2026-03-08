@@ -108,7 +108,7 @@ uv run python app.py
 
 服务默认运行在 **http://localhost:5001**
 
-### 首次配置
+### ⚙️首次配置
 
 启动后打开浏览器访问 `http://localhost:5001`，点击界面左上角的设置图标，配置：
 
@@ -118,7 +118,7 @@ uv run python app.py
 配置会保存到 `config.json`
 
 
-## 使用指南
+## 📚使用指南
 
 ### 1. 上传与索引
 
@@ -148,9 +148,9 @@ uv run python app.py
 - 新建技能只需编写一个 Markdown 文件
 
 
-## 技术架构
+##🏗️ 技术架构
 
-### 系统架构图
+### 🗺️系统架构图
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -187,7 +187,7 @@ uv run python app.py
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### Agent 工作流程
+### 🔄Agent 工作流程
 
 ```
 用户提问
@@ -228,7 +228,7 @@ uv run python app.py
     输出最终答案
 ```
 
-### 项目目录结构
+### 📁项目目录结构
 
 ```
 PageIndex_Agent_UI/
@@ -281,7 +281,7 @@ PageIndex_Agent_UI/
 ```
 
 
-## API / 模型说明
+## 🔌API / 模型说明
 
 ### 调用方式
 
@@ -306,7 +306,7 @@ PageIndex_Agent_UI/
 
 > 以上默认模型仅为推荐配置，可在 Web UI 设置面板中自由更换为任何 OpenAI 兼容模型。
 
-### 配置参数
+### ⚙️配置参数
 
 #### 模型配置（`config.json` / Web UI）
 
@@ -341,7 +341,7 @@ PageIndex_Agent_UI/
 | `REFLECT_ACCEPT_THRESHOLD` | `6` | 反思评分低于此值触发重试（满分 10） |
 
 
-## 成本估算
+## 💰成本估算
 
 由于本项目完全通过 LLM API 驱动，使用成本取决于所选模型的定价。以下基于 OpenAI 官方价格估算（2025 年），仅供参考。
 
@@ -379,7 +379,7 @@ PageIndex_Agent_UI/
 | 索引一篇 20 页论文 + 问 10 个问题 | 全程用 gpt-4o（含视觉模式） | ~$1.50–4.00 |
 
 
-## 项目依赖
+## 📦项目依赖
 
 | 依赖 | 版本 | 用途 |
 |------|------|------|
@@ -394,12 +394,12 @@ PageIndex_Agent_UI/
 | PyYAML | >= 6.0 | 配置文件解析 |
 
 
-## 致谢
+## 🙏致谢
 
 本项目的核心 PageIndex 索引算法参考自 [VectifyAI/PageIndex](https://github.com/VectifyAI/PageIndex) 开源项目。
 
 
-## License
+## 📄License
 
 MIT License
 
