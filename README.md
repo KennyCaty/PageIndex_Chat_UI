@@ -155,40 +155,7 @@ uv run python app.py
 
 ### 🗺️系统架构图
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                     Frontend (Web UI)                             │
-│              Bootstrap 5 + Socket.IO Client + Vanilla JS          │
-│         templates/index.html  +  static/js/app.js                │
-└──────────────────────────────────────────────────────────────────┘
-                              │ WebSocket (Socket.IO)
-                              ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                   Backend (Flask + Flask-SocketIO)                │
-├────────────────┬──────────────────────┬──────────────────────────┤
-│    Routes      │      Services        │       Models             │
-│  api.py        │  agent.py            │  document.py             │
-│  socket_       │  rag_service.py      │  (DocumentStore,         │
-│  handlers.py   │  indexing_service.py  │   Message, etc.)         │
-│                │  skill_manager.py     │                          │
-│                │  tools/               │                          │
-│                │   ├─ tree_search      │                          │
-│                │   ├─ node_reader      │                          │
-│                │   ├─ keyword_search   │                          │
-│                │   ├─ page_viewer      │                          │
-│                │   └─ summarizer       │                          │
-├────────────────┴──────────────────────┴──────────────────────────┤
-│                     PageIndex Core                                │
-│  pageindex/page_index.py  —  树状结构构建、目录检测、页码对齐       │
-│  pageindex/utils.py       —  PDF 解析、Token 计算、LLM 调用       │
-└──────────────────────────────────────────────────────────────────┘
-                              │ OpenAI Python SDK
-                              ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                      LLM Provider                                │
-│           OpenAI API  /  任何 OpenAI 兼容 API 服务                │
-└──────────────────────────────────────────────────────────────────┘
-```
+![架构图](image/architecture.png)
 
 ### 🔄Agent 工作流程
 
