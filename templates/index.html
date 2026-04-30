@@ -8,622 +8,219 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-    <style>
-        :root {
-            --primary: #4f46e5;
-            --primary-light: #818cf8;
-            --secondary: #7c3aed;
-            --bg: #f0f2f5;
-            --sidebar-bg: #1e1b4b;
-            --card-bg: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --border: #e2e8f0;
-            --agent-gradient: linear-gradient(135deg, #818cf8, #c084fc);
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text-primary);
-            height: 100vh;
-            overflow: hidden;
-            margin: 0;
-        }
-
-        /* ====================== SIDEBAR ====================== */
-        .sidebar {
-            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #312e81 100%);
-            color: white;
-            width: 280px;
-            height: 100vh;
-            position: fixed;
-            left: 0; top: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
-            z-index: 100;
-        }
-        .sidebar-header { padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
-        .sidebar-header h4 { font-weight: 700; margin: 0; display: flex; align-items: center; gap: 10px; }
-        .logo-icon { width: 32px; height: 32px; background: var(--agent-gradient); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-        .document-list { flex: 1; overflow-y: auto; padding-right: 5px; }
-        .document-list::-webkit-scrollbar { width: 5px; }
-        .document-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 5px; }
-        .doc-item { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px 15px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s ease; border: 1px solid transparent; }
-        .doc-item:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
-        .doc-item.active { background: rgba(99,102,241,0.3); border-color: #818cf8; }
-        .doc-item .doc-name { font-weight: 500; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .doc-item .doc-status { font-size: 12px; color: rgba(255,255,255,0.6); display: flex; align-items: center; gap: 5px; }
-        .doc-item .doc-actions { display: none; gap: 5px; margin-top: 8px; }
-        .doc-item:hover .doc-actions, .doc-item.error .doc-actions { display: flex; }
-        .doc-action-btn { background: rgba(255,255,255,0.1); border: none; color: rgba(255,255,255,0.7); padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
-        .doc-action-btn:hover { background: rgba(255,255,255,0.2); color: white; }
-        .doc-action-btn.delete:hover { background: rgba(239,68,68,0.3); color: #fca5a5; }
-        .doc-action-btn.retry { background: rgba(34,197,94,0.2); color: #86efac; }
-        .status-badge { width: 8px; height: 8px; border-radius: 50%; }
-        .status-ready { background: #22c55e; }
-        .status-pending { background: #f59e0b; }
-        .status-indexing { background: #3b82f6; animation: pulse 1s infinite; }
-        .status-error { background: #ef4444; }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .upload-area { border: 2px dashed rgba(255,255,255,0.3); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; margin-top: auto; }
-        .upload-area:hover { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); }
-        .upload-area i { font-size: 24px; margin-bottom: 10px; color: rgba(255,255,255,0.6); }
-
-        /* ====================== MAIN CONTENT ====================== */
-        .main-content { margin-left: 280px; height: 100vh; display: flex; flex-direction: column; transition: margin-right 0.3s ease; }
-        .main-content.preview-open { margin-right: 500px; }
-
-        /* ====================== TOP BAR (redesigned) ====================== */
-        .top-bar {
-            background: white;
-            padding: 0;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-        }
-        .top-bar-main {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 25px;
-        }
-        .top-bar-left { display: flex; align-items: center; gap: 12px; }
-        .top-bar-right { display: flex; align-items: center; gap: 16px; }
-        .model-toggle { display: flex; background: #f1f5f9; border-radius: 10px; padding: 3px; }
-        .model-toggle button { border: none; background: transparent; padding: 7px 14px; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s; color: var(--text-secondary); font-size: 13px; }
-        .model-toggle button.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .settings-btn { background: transparent; border: none; padding: 8px; cursor: pointer; color: var(--text-secondary); border-radius: 8px; transition: all 0.2s; }
-        .settings-btn:hover { background: #f1f5f9; color: var(--primary); }
-        .memory-check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); cursor: pointer; }
-        .memory-check input { accent-color: var(--primary); }
-
-        /* Agent mode styled toggle */
-        .agent-switch { display: flex; align-items: center; gap: 10px; }
-        .agent-switch-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
-        .agent-switch-track {
-            position: relative; width: 44px; height: 24px;
-            background: #cbd5e1; border-radius: 12px;
-            cursor: pointer; transition: background 0.3s;
-        }
-        .agent-switch-track.active { background: var(--primary); }
-        .agent-switch-thumb {
-            position: absolute; top: 2px; left: 2px;
-            width: 20px; height: 20px; background: white;
-            border-radius: 50%; transition: transform 0.3s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-        .agent-switch-track.active .agent-switch-thumb { transform: translateX(20px); }
-
-        /* Agent banner */
-        .agent-banner {
-            background: linear-gradient(90deg, #eef2ff, #f5f3ff, #faf5ff);
-            padding: 8px 25px;
-            font-size: 12px;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-top: 1px solid #e0e7ff;
-            transition: all 0.3s;
-        }
-        .agent-banner.hidden { display: none; }
-        .agent-banner-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: pulse 1.5s infinite; }
-        .agent-badge-pill {
-            background: var(--agent-gradient); color: white;
-            font-size: 10px; padding: 2px 8px; border-radius: 8px;
-            font-weight: 700; letter-spacing: 0.5px;
-        }
-
-        /* ====================== ANALYSIS BAR (persistent) ====================== */
-        .analysis-bar {
-            background: white;
-            border-bottom: 1px solid var(--border);
-            overflow: hidden;
-            transition: max-height 0.4s ease;
-            max-height: 0;
-        }
-        .analysis-bar.open { max-height: 500px; }
-        .analysis-bar-toggle {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 25px; cursor: pointer; user-select: none;
-            background: linear-gradient(90deg, #ecfdf5, #f0fdf4);
-            border-bottom: 1px solid #d1fae5;
-        }
-        .analysis-bar-toggle:hover { background: linear-gradient(90deg, #d1fae5, #dcfce7); }
-        .analysis-bar-toggle-left { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #065f46; }
-        .analysis-bar-toggle i.chevron { transition: transform 0.3s; font-size: 14px; color: #059669; }
-        .analysis-bar.open .analysis-bar-toggle i.chevron { transform: rotate(180deg); }
-        .analysis-bar-body { padding: 16px 25px 20px; }
-        .analysis-summary-text { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px; }
-        .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
-        .analysis-card { background: #f8fafc; border-radius: 10px; padding: 14px; }
-        .analysis-card-title { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .analysis-card ul { padding-left: 16px; margin: 0; }
-        .analysis-card li { font-size: 13px; color: var(--text-secondary); margin-bottom: 3px; }
-        .suggest-questions { display: flex; flex-wrap: wrap; gap: 8px; }
-        .suggest-btn {
-            background: white; border: 1px solid var(--border);
-            color: var(--text-primary); padding: 8px 14px;
-            border-radius: 20px; font-size: 13px; cursor: pointer;
-            transition: all 0.2s; text-align: left;
-        }
-        .suggest-btn:hover { border-color: var(--primary); color: var(--primary); background: #eef2ff; transform: translateY(-1px); }
-
-        /* Mini analysis button (when bar is collapsed & analysis available) */
-        .analysis-mini-btn {
-            display: none;
-            background: linear-gradient(90deg, #ecfdf5, #f0fdf4);
-            border: none; border-bottom: 1px solid #d1fae5;
-            padding: 8px 25px; cursor: pointer; width: 100%;
-            font-size: 12px; color: #065f46; font-weight: 500;
-            text-align: left; transition: background 0.2s;
-        }
-        .analysis-mini-btn:hover { background: #d1fae5; }
-        .analysis-mini-btn.visible { display: flex; align-items: center; gap: 6px; }
-
-        /* ====================== CHAT ====================== */
-        .chat-container { flex: 1; overflow-y: auto; padding: 20px; }
-        .chat-messages { max-width: 900px; margin: 0 auto; padding: 20px 0; }
-        .message { margin-bottom: 20px; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .message-user { display: flex; justify-content: flex-end; }
-        .message-user .message-content { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 18px 18px 4px 18px; padding: 12px 18px; max-width: 70%; }
-        .message-assistant .message-content { background: white; border-radius: 18px 18px 18px 4px; padding: 18px 22px; max-width: 82%; box-shadow: 0 1px 6px rgba(79,70,229,0.06), 0 1px 3px rgba(0,0,0,0.04); border: 1px solid rgba(226,232,240,0.6); }
-        .typing-indicator { display: flex; align-items: center; gap: 5px; padding: 15px 20px; background: white; border-radius: 18px; width: fit-content; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .typing-dot { width: 8px; height: 8px; background: var(--text-secondary); border-radius: 50%; animation: typing 1.4s infinite; }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typing { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
-
-        /* ====================== THINKING / NODES ====================== */
-        .thinking-box { background: #f8fafc; border-left: 3px solid var(--primary); padding: 12px 15px; margin-bottom: 12px; border-radius: 0 8px 8px 0; font-size: 14px; color: var(--text-secondary); }
-        .thinking-box strong { color: var(--text-primary); display: block; margin-bottom: 5px; }
-        .nodes-box { background: #ecfdf5; border-left: 3px solid #22c55e; padding: 10px 15px; margin-bottom: 12px; border-radius: 0 8px 8px 0; font-size: 13px; }
-
-        /* ====================== AGENT TIMELINE ====================== */
-        .agent-timeline { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
-        .agent-timeline-header { font-weight: 600; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 14px; }
-        .agent-step { position: relative; padding-left: 24px; padding-bottom: 12px; border-left: 2px solid #e2e8f0; margin-left: 6px; }
-        .agent-step:last-child { border-left-color: transparent; padding-bottom: 0; }
-        .agent-step::before { content: ''; position: absolute; left: -6px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); border: 2px solid white; box-shadow: 0 0 0 2px var(--primary); }
-        .step-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-        .step-number { font-size: 11px; font-weight: 600; color: var(--primary); background: #eef2ff; padding: 2px 8px; border-radius: 10px; }
-        .step-tool { font-size: 11px; font-weight: 500; color: white; background: var(--agent-gradient); padding: 2px 8px; border-radius: 10px; }
-        .step-thought { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; line-height: 1.4; }
-        .step-observation { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 6px 10px; border-radius: 6px; max-height: 80px; overflow: hidden; }
-
-        /* ====================== DECOMPOSE / REFLECT ====================== */
-        .decompose-box { background: #eff6ff; border-left: 3px solid #3b82f6; padding: 12px 15px; margin-bottom: 12px; border-radius: 0 8px 8px 0; font-size: 13px; }
-        .decompose-box strong { color: #1e40af; display: block; margin-bottom: 6px; }
-        .sub-question { padding: 4px 0; color: #374151; }
-        .reflect-box { background: #fefce8; border-left: 3px solid #eab308; padding: 12px 15px; margin-bottom: 12px; border-radius: 0 8px 8px 0; font-size: 13px; }
-        .reflect-box strong { color: #854d0e; display: block; margin-bottom: 4px; }
-        .reflect-score { display: inline-block; padding: 2px 10px; border-radius: 10px; font-weight: 600; font-size: 12px; margin-right: 8px; }
-        .reflect-score.good { background: #dcfce7; color: #166534; }
-        .reflect-score.medium { background: #fef9c3; color: #854d0e; }
-        .reflect-score.poor { background: #fee2e2; color: #991b1b; }
-
-        /* ====================== NODE TAGS ====================== */
-        .node-tag { display: inline-block; background: var(--agent-gradient); color: white; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; margin: 2px; }
-        .node-tag:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(129,140,248,0.4); }
-
-        /* ====================== INPUT ====================== */
-        .input-area { background: white; padding: 20px; border-top: 1px solid var(--border); }
-        .input-container { max-width: 900px; margin: 0 auto; display: flex; gap: 15px; align-items: flex-end; }
-        .input-wrapper { flex: 1; position: relative; }
-        .chat-input { width: 100%; border: 2px solid var(--border); border-radius: 15px; padding: 15px 20px; font-size: 15px; resize: none; min-height: 50px; max-height: 200px; transition: border-color 0.2s; }
-        .chat-input:focus { outline: none; border-color: var(--primary); }
-        .send-btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: white; width: 50px; height: 50px; border-radius: 15px; cursor: pointer; transition: all 0.25s; display: flex; align-items: center; justify-content: center; }
-        .send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(79,70,229,0.4); }
-        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-        .send-btn.stop-mode { background: linear-gradient(135deg, #ef4444, #dc2626); border-radius: 15px; animation: stopPulse 1.5s ease-in-out infinite; }
-        .send-btn.stop-mode:hover { transform: scale(1.08); box-shadow: 0 4px 15px rgba(239,68,68,0.45); }
-        .send-btn.stop-mode i { font-size: 18px; }
-        @keyframes stopPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
-
-        /* ====================== EMPTY STATE (redesigned) ====================== */
-        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-secondary); text-align: center; }
-        .empty-hero-icon { width: 80px; height: 80px; background: var(--agent-gradient); border-radius: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(79,70,229,0.2); }
-        .empty-hero-icon i { font-size: 36px; color: white; }
-        .empty-state h4 { color: var(--text-primary); margin-bottom: 8px; font-weight: 600; }
-        .empty-state p { max-width: 400px; line-height: 1.6; }
-        .empty-features { display: flex; gap: 20px; margin-top: 24px; }
-        .empty-feature { background: white; border-radius: 12px; padding: 16px; width: 150px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); text-align: center; }
-        .empty-feature i { font-size: 24px; color: var(--primary-light); margin-bottom: 8px; display: block; }
-        .empty-feature span { font-size: 12px; color: var(--text-secondary); }
-
-        /* ====================== MODAL ====================== */
-        .modal-content { border: none; border-radius: 16px; }
-        .modal-header { border-bottom: 1px solid var(--border); padding: 20px 25px; }
-        .modal-title { font-weight: 600; }
-        .modal-body { padding: 25px; }
-        .form-label { font-weight: 500; color: var(--text-primary); margin-bottom: 8px; }
-        .form-control { border: 2px solid var(--border); border-radius: 10px; padding: 12px 15px; }
-        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
-        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; padding: 12px 24px; border-radius: 10px; font-weight: 500; }
-
-        /* ====================== PAGE PREVIEW ====================== */
-        .page-preview-modal { position: fixed; top: 0; right: 0; width: 500px; height: 100%; z-index: 10000; display: none; background: white; flex-direction: column; box-shadow: -4px 0 30px rgba(0,0,0,0.15); }
-        .page-preview-modal.active { display: flex; animation: sidebarSlideIn 0.3s ease; }
-        .page-preview-content { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-        @keyframes sidebarSlideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-        .page-preview-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--border); }
-        .page-preview-title { margin: 0; font-size: 18px; font-weight: 600; }
-        .page-preview-close { background: transparent; border: none; padding: 8px; cursor: pointer; color: var(--text-secondary); border-radius: 8px; }
-        .page-preview-header-actions { display: flex; align-items: center; gap: 4px; }
-        .highlight-toggle-btn {
-            background: transparent; border: 1px solid var(--border); padding: 6px 8px;
-            border-radius: 8px; cursor: pointer; color: var(--text-secondary);
-            font-size: 14px; transition: all 0.2s; display: flex; align-items: center;
-        }
-        .highlight-toggle-btn:hover { background: #f1f5f9; }
-        .highlight-toggle-btn.active { background: #eef2ff; color: var(--primary); border-color: var(--primary-light); }
-
-        /* Highlight canvas overlay */
-        .highlight-canvas {
-            position: absolute; top: 0; left: 0;
-            pointer-events: none; border-radius: 8px;
-        }
-
-        /* Node info card in preview header */
-        .node-info-card {
-            display: flex; align-items: flex-start; gap: 12px;
-            padding: 12px 20px; border-bottom: 1px solid var(--border);
-            background: #fafbfc;
-        }
-        .node-info-badge {
-            flex-shrink: 0; padding: 4px 10px; border-radius: 8px;
-            font-size: 12px; font-weight: 700; white-space: nowrap;
-        }
-        .node-info-detail { flex: 1; min-width: 0; }
-        .node-info-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
-        .node-info-meta { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
-        .node-info-meta i { font-size: 11px; }
-        .node-info-summary {
-            font-size: 12px; color: var(--text-secondary); line-height: 1.5;
-            max-height: 54px; overflow: hidden;
-            display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical;
-        }
-
-        .page-preview-body { flex: 1; overflow-y: auto; padding: 16px; }
-        .page-preview-images { display: flex; flex-direction: column; gap: 16px; align-items: center; }
-        .page-image-container { position: relative; text-align: center; width: 100%; }
-        .page-image-container.current-node-page { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: 10px; }
-        .page-preview-image { max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; }
-        .page-preview-image:hover { transform: scale(1.02); }
-        .page-node-tags { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 6px; }
-        .page-node-tag {
-            display: inline-flex; align-items: center; gap: 4px;
-            padding: 3px 9px; border-radius: 10px; font-size: 11px; font-weight: 500;
-            cursor: pointer; transition: all 0.2s; border: 1.5px solid transparent;
-            max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
-        .page-node-tag:hover { transform: translateY(-1px); filter: brightness(0.95); }
-        .page-node-tag.active-node { border-color: var(--text-primary); box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-weight: 700; }
-        .page-node-tag.highlight-active { border-color: currentColor; box-shadow: 0 0 0 2px currentColor; transform: translateY(-1px); }
-        .page-node-tag-id { font-weight: 700; opacity: 0.7; font-size: 10px; }
-        .page-number { margin-top: 4px; font-size: 13px; color: var(--text-secondary); }
-        .page-preview-footer { padding: 12px 16px; border-top: 1px solid var(--border); }
-        .page-preview-nav { display: flex; justify-content: center; align-items: center; gap: 16px; }
-        .page-nav-btn { background: #f1f5f9; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
-        .page-nav-btn:hover:not(:disabled) { background: var(--primary); color: white; }
-        .page-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .page-indicator { font-weight: 500; color: var(--text-primary); min-width: 60px; text-align: center; }
-        .fullscreen-image-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10001; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .fullscreen-image { max-width: 95vw; max-height: 95vh; object-fit: contain; }
-        .fullscreen-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; color: white; padding: 12px; border-radius: 50%; cursor: pointer; }
-
-        .clear-history-btn { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-top: 10px; width: 100%; }
-        .clear-history-btn:hover { background: rgba(255,255,255,0.1); color: white; }
-
-        /* ====================== SKILLS PANEL ====================== */
-        .skills-section { border-top: 1px solid rgba(255,255,255,0.1); margin-top: 12px; padding-top: 8px; }
-        .skills-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 8px 4px; cursor: pointer; user-select: none;
-        }
-        .skills-header-left { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); }
-        .skills-header-left i.chevron { transition: transform 0.3s; font-size: 11px; }
-        .skills-section.open .skills-header-left i.chevron { transform: rotate(180deg); }
-        .skills-header-actions { display: flex; gap: 4px; }
-        .skill-action-btn {
-            background: rgba(255,255,255,0.08); border: none; color: rgba(255,255,255,0.6);
-            width: 26px; height: 26px; border-radius: 6px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 13px;
-            transition: all 0.2s;
-        }
-        .skill-action-btn:hover { background: rgba(255,255,255,0.18); color: white; }
-        .skills-list { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
-        .skills-section.open .skills-list { max-height: 400px; overflow-y: auto; }
-        .skills-list::-webkit-scrollbar { width: 4px; }
-        .skills-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-        .skill-item {
-            display: flex; align-items: center; gap: 10px;
-            padding: 8px 10px; border-radius: 8px; margin-bottom: 4px;
-            transition: background 0.15s; cursor: pointer;
-        }
-        .skill-item:hover { background: rgba(255,255,255,0.08); }
-        .skill-toggle { position: relative; width: 32px; height: 18px; border-radius: 9px; background: rgba(255,255,255,0.2); cursor: pointer; flex-shrink: 0; transition: background 0.25s; }
-        .skill-toggle.active { background: #22c55e; }
-        .skill-toggle::after {
-            content: ''; position: absolute; top: 2px; left: 2px;
-            width: 14px; height: 14px; border-radius: 50%; background: white;
-            transition: transform 0.25s;
-        }
-        .skill-toggle.active::after { transform: translateX(14px); }
-        .skill-info { flex: 1; min-width: 0; }
-        .skill-name { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .skill-desc { font-size: 10px; color: rgba(255,255,255,0.45); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .skill-edit-btn {
-            background: none; border: none; color: rgba(255,255,255,0.35);
-            font-size: 12px; cursor: pointer; padding: 2px 4px; flex-shrink: 0;
-            opacity: 0; transition: opacity 0.15s, color 0.15s;
-        }
-        .skill-item:hover .skill-edit-btn { opacity: 1; }
-        .skill-edit-btn:hover { color: rgba(255,255,255,0.8); }
-
-        /* Skill Editor Modal */
-        .skill-editor-modal .modal-dialog { max-width: 680px; }
-        .skill-editor-modal .modal-content { border-radius: 16px; border: none; }
-        .skill-editor-header { display: flex; align-items: center; gap: 10px; }
-        .skill-editor-header i { font-size: 20px; color: var(--primary); }
-        .skill-md-editor {
-            font-family: 'Consolas', 'Monaco', 'Fira Code', monospace;
-            font-size: 13px; line-height: 1.6; min-height: 260px;
-            background: #f8fafc; border: 2px solid var(--border);
-            border-radius: 10px; padding: 14px; resize: vertical;
-        }
-        .skill-md-editor:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
-        .skill-preview-pane {
-            background: white; border: 1px solid var(--border); border-radius: 10px;
-            padding: 16px; max-height: 280px; overflow-y: auto; font-size: 13.5px;
-            line-height: 1.7; color: var(--text-primary);
-        }
-        .skill-delete-btn { color: #ef4444; background: none; border: 1px solid #fecaca; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
-        .skill-delete-btn:hover { background: #fef2f2; border-color: #ef4444; }
-
-        /* Markdown content in assistant messages */
-        .message-assistant .message-content { line-height: 1.75; font-size: 14.5px; color: #334155; }
-        .message-assistant .message-content > *:first-child { margin-top: 0; }
-        .message-assistant .message-content > *:last-child { margin-bottom: 0; }
-
-        .message-assistant .message-content h1 {
-            font-size: 1.35em; font-weight: 700; margin: 20px 0 10px;
-            color: var(--primary); border-bottom: 2px solid var(--primary-light);
-            padding-bottom: 6px;
-        }
-        .message-assistant .message-content h2 {
-            font-size: 1.18em; font-weight: 700; margin: 18px 0 8px;
-            color: var(--primary); display: flex; align-items: center; gap: 6px;
-        }
-        .message-assistant .message-content h2::before {
-            content: ''; display: inline-block; width: 4px; height: 18px;
-            background: var(--agent-gradient); border-radius: 2px; flex-shrink: 0;
-        }
-        .message-assistant .message-content h3 {
-            font-size: 1.05em; font-weight: 600; margin: 14px 0 6px;
-            color: var(--text-primary);
-        }
-        .message-assistant .message-content h4 {
-            font-size: 0.98em; font-weight: 600; margin: 12px 0 4px;
-            color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px;
-        }
-
-        .message-assistant .message-content p { margin-bottom: 10px; line-height: 1.8; }
-
-        .message-assistant .message-content ul,
-        .message-assistant .message-content ol { padding-left: 22px; margin-bottom: 12px; }
-        .message-assistant .message-content li { margin-bottom: 5px; line-height: 1.7; }
-        .message-assistant .message-content li::marker { color: var(--primary-light); }
-
-        .message-assistant .message-content strong {
-            font-weight: 700;
-            background: linear-gradient(120deg, rgba(79,70,229,0.08) 0%, rgba(129,140,248,0.12) 100%);
-            padding: 1px 5px; border-radius: 4px; color: var(--text-primary);
-        }
-        .message-assistant .message-content em { color: #6366f1; font-style: italic; }
-
-        .message-assistant .message-content code {
-            background: linear-gradient(135deg, #eef2ff, #f1f5f9); color: #7c3aed;
-            padding: 2px 7px; border-radius: 5px; font-size: 0.88em;
-            font-family: 'Consolas', 'Monaco', 'Fira Code', monospace;
-            border: 1px solid #e0e7ff;
-        }
-        .message-assistant .message-content pre {
-            background: linear-gradient(135deg, #1e1b4b, #1e293b); color: #e2e8f0;
-            padding: 16px 20px; border-radius: 12px; overflow-x: auto;
-            margin: 14px 0; font-size: 13px; border: 1px solid rgba(129,140,248,0.15);
-            box-shadow: 0 2px 8px rgba(30,27,75,0.12);
-        }
-        .message-assistant .message-content pre code {
-            background: transparent; color: inherit; padding: 0; font-size: inherit; border: none;
-        }
-
-        .message-assistant .message-content blockquote {
-            border-left: 3px solid var(--primary-light); padding: 10px 16px;
-            margin: 14px 0; background: linear-gradient(135deg, #eef2ff, #f5f3ff);
-            border-radius: 0 10px 10px 0; color: #475569; font-style: italic;
-        }
-        .message-assistant .message-content blockquote p { margin-bottom: 4px; }
-
-        .message-assistant .message-content .table-wrapper {
-            overflow-x: auto; margin: 14px 0; border-radius: 10px;
-            border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-            -webkit-overflow-scrolling: touch;
-        }
-        .message-assistant .message-content .table-wrapper::-webkit-scrollbar { height: 6px; }
-        .message-assistant .message-content .table-wrapper::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 3px; }
-        .message-assistant .message-content .table-wrapper::-webkit-scrollbar-track { background: #f1f5f9; }
-        .message-assistant .message-content table {
-            border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%;
-            font-size: 13.5px; margin: 0; border: none; box-shadow: none;
-        }
-        .message-assistant .message-content th {
-            background: linear-gradient(135deg, #eef2ff, #f5f3ff);
-            font-weight: 700; color: var(--primary); padding: 10px 14px;
-            text-align: left; border-bottom: 2px solid #c7d2fe; font-size: 13px;
-            white-space: nowrap;
-        }
-        .message-assistant .message-content td {
-            padding: 9px 14px; text-align: left; border-bottom: 1px solid #f1f5f9;
-            white-space: nowrap;
-        }
-        .message-assistant .message-content tr:last-child td { border-bottom: none; }
-        .message-assistant .message-content tr:hover td { background: #faf5ff; }
-
-        .message-assistant .message-content hr {
-            border: none; height: 2px; margin: 18px 0;
-            background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
-        }
-
-        .message-assistant .message-content a {
-            color: var(--primary); text-decoration: none;
-            border-bottom: 1px dashed var(--primary-light); transition: all 0.2s;
-        }
-        .message-assistant .message-content a:hover { color: var(--secondary); border-bottom-style: solid; }
-
-        .message-assistant .message-content .katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
-    </style>
+    <link rel="stylesheet" href="/static/css/app.css?v={{ assets_version }}">
 </head>
 
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h4>
-                <div class="logo-icon"><i class="bi bi-robot"></i></div>
-                PageIndex Agent
-            </h4>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <div class="logo-icon"><i class="bi bi-robot"></i></div>
+            <span>PageIndex Agent</span>
         </div>
-        <div class="document-list" id="documentList"></div>
-        <!-- Skills Section -->
-        <div class="skills-section open" id="skillsSection">
-            <div class="skills-header" onclick="toggleSkillsPanel()">
-                <span class="skills-header-left">
-                    <i class="bi bi-lightning-charge-fill"></i> Agent Skills
-                    <i class="bi bi-chevron-up chevron"></i>
-                </span>
-                <span class="skills-header-actions" onclick="event.stopPropagation()">
-                    <button class="skill-action-btn" title="上传 Skill (.md)" onclick="document.getElementById('skillFileInput').click()">
-                        <i class="bi bi-upload"></i>
-                    </button>
-                    <button class="skill-action-btn" title="新建 Skill" onclick="openSkillEditor()">
-                        <i class="bi bi-plus-lg"></i>
-                    </button>
-                </span>
+        <div class="nav-tabs-wrapper">
+            <button class="nav-tab active" data-page="library"><i class="bi bi-collection"></i> 知识库</button>
+            <button class="nav-tab" data-page="kb-chat"><i class="bi bi-chat-square-dots"></i> 知识库问答</button>
+        </div>
+        <div class="nav-actions">
+            <div class="model-toggle">
+                <button id="textModelBtn" class="active" type="button"><i class="bi bi-chat-text"></i> 文本</button>
+                <button id="visionModelBtn" type="button"><i class="bi bi-eye"></i> 视觉</button>
             </div>
-            <div class="skills-list" id="skillsList"></div>
-            <input type="file" id="skillFileInput" accept=".md" style="display: none;">
+            <button class="nav-icon-btn" id="skillsBtn" title="Agent Skills"><i class="bi bi-lightning-charge-fill"></i></button>
+            <button class="nav-icon-btn" id="settingsBtn" title="模型配置"><i class="bi bi-gear"></i></button>
         </div>
+    </nav>
 
-        <div class="upload-area" id="uploadArea">
-            <i class="bi bi-cloud-upload"></i>
-            <div>上传 PDF 文档</div>
-            <small style="color: rgba(255,255,255,0.5);">点击或拖拽文件</small>
-        </div>
-        <input type="file" id="fileInput" accept=".pdf" style="display: none;">
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <div class="top-bar-main">
-                <div class="top-bar-left">
-                    <div class="model-toggle">
-                        <button id="textModelBtn" class="active" type="button"><i class="bi bi-chat-text"></i> 文本模型</button>
-                        <button id="visionModelBtn" type="button"><i class="bi bi-eye"></i> 视觉模型</button>
-                    </div>
-                    <button class="settings-btn" id="settingsBtn" type="button"><i class="bi bi-gear"></i></button>
-                </div>
-                <div class="top-bar-right">
-                    <div class="agent-switch">
-                        <span class="agent-switch-label"><i class="bi bi-robot"></i> Agent</span>
-                        <div class="agent-switch-track active" id="agentToggle" onclick="toggleAgent()">
-                            <div class="agent-switch-thumb"></div>
+    <!-- ============================================== -->
+    <!-- Page 1: Library (knowledge base management)    -->
+    <!-- ============================================== -->
+    <div class="page page-library active" id="pageLibrary">
+        <div class="library-inner">
+            <!-- Hero banner -->
+            <section class="library-hero">
+                <div class="hero-inner">
+                    <div class="hero-text">
+                        <span class="hero-badge">
+                            <i class="bi bi-stars"></i> PageIndex Agent · 会推理的文档助手
+                        </span>
+                        <h1 class="hero-title">
+                            让 <span class="grad-word">LLM</span> 像人类一样<br>
+                            阅读文档
+                        </h1>
+                        <p class="hero-subtitle">
+                            基于树状结构推理的 Agentic RAG 知识库问答系统，无向量 / 无 Embedding。
+                            Agent 通过多步推理 + 工具调用在文档目录树中检索、阅读、归纳，
+                            支持单文档深读与跨文档对比分析。
+                        </p>
+                        <div class="hero-actions">
+                            <button class="hero-btn primary" id="heroUploadBtn">
+                                <i class="bi bi-cloud-arrow-up-fill"></i> 上传 PDF
+                            </button>
+                            <button class="hero-btn ghost" id="heroKbBtn">
+                                <i class="bi bi-chat-square-dots"></i> 进入知识库问答
+                            </button>
                         </div>
                     </div>
-                    <label class="memory-check">
-                        <input type="checkbox" id="memoryToggle" checked> 对话记忆
-                    </label>
-                </div>
-            </div>
-            <div class="agent-banner" id="agentBanner">
-                <span class="agent-badge-pill">AGENT</span>
-                <span class="agent-banner-dot"></span>
-                智能体模式已启用 — 多步推理 · 查询分解 · 自我反思 · 多工具协作
-            </div>
-        </div>
-
-        <!-- Analysis Mini Button (when bar is collapsed) -->
-        <button class="analysis-mini-btn" id="analysisMiniBtn" onclick="toggleAnalysisBar()">
-            <i class="bi bi-lightbulb-fill"></i> 查看文档智能分析
-            <i class="bi bi-chevron-down" style="margin-left:auto"></i>
-        </button>
-
-        <!-- Analysis Bar (persistent, between top bar and chat) -->
-        <div class="analysis-bar" id="analysisBar">
-            <div class="analysis-bar-toggle" onclick="toggleAnalysisBar()">
-                <span class="analysis-bar-toggle-left"><i class="bi bi-lightbulb-fill"></i> 文档智能分析</span>
-                <i class="bi bi-chevron-up chevron"></i>
-            </div>
-            <div class="analysis-bar-body" id="analysisBarBody"></div>
-        </div>
-
-        <!-- Chat Area -->
-        <div class="chat-container" id="chatContainer">
-            <div class="chat-messages" id="chatMessages">
-                <div class="empty-state" id="emptyState">
-                    <div class="empty-hero-icon"><i class="bi bi-robot"></i></div>
-                    <h4>PageIndex Agent</h4>
-                    <p>上传 PDF 文档，智能体会自动分析文档结构并提供深度问答服务</p>
-                    <div class="empty-features">
-                        <div class="empty-feature"><i class="bi bi-diagram-3"></i><span>多步推理</span></div>
-                        <div class="empty-feature"><i class="bi bi-tools"></i><span>多工具协作</span></div>
-                        <div class="empty-feature"><i class="bi bi-shield-check"></i><span>自我反思</span></div>
-                        <div class="empty-feature"><i class="bi bi-lightbulb"></i><span>主动分析</span></div>
+                    <div class="hero-stats">
+                        <div class="stat-card">
+                            <div class="stat-label">文档总数</div>
+                            <div class="stat-value" id="statTotalDocs">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">已就绪</div>
+                            <div class="stat-value" id="statReadyDocs">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">累计页数</div>
+                            <div class="stat-value" id="statTotalPages">0<span class="unit">页</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">对话会话</div>
+                            <div class="stat-value" id="statTotalSessions">0</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- Input Area -->
-        <div class="input-area">
-            <div class="input-container">
-                <div class="input-wrapper">
-                    <textarea class="chat-input" id="chatInput" placeholder="输入您的问题..." rows="1"></textarea>
+            <!-- Feature cards -->
+            <section class="feature-cards">
+                <div class="feature-card">
+                    <div class="feature-icon c1"><i class="bi bi-diagram-3-fill"></i></div>
+                    <div class="feature-body">
+                        <h4>结构化索引</h4>
+                        <p>基于 PageIndex 构建文档目录树，Agent 能按章节层级定位内容，不再丢上下文。</p>
+                    </div>
                 </div>
-                <button class="send-btn" id="sendBtn" type="button"><i class="bi bi-send"></i></button>
+                <div class="feature-card">
+                    <div class="feature-icon c2"><i class="bi bi-cpu-fill"></i></div>
+                    <div class="feature-body">
+                        <h4>Agent 多步推理</h4>
+                        <p>Agent 自主规划搜索、阅读、总结路径，支持文本与视觉两种模型模式。</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon c3"><i class="bi bi-intersect"></i></div>
+                    <div class="feature-body">
+                        <h4>跨文档对比</h4>
+                        <p>在知识库问答中选择多份文档，一次提问，Agent 自动聚合并标注引用来源。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Docs section -->
+            <div class="docs-section-header">
+                <h3 class="docs-section-title">
+                    <i class="bi bi-folder2-open"></i> 我的文档
+                    <span class="docs-count-badge" id="docsCountBadge">0</span>
+                </h3>
+                <button class="btn-primary-grad" id="libraryUploadBtn">
+                    <i class="bi bi-cloud-upload"></i> 上传文档
+                </button>
             </div>
+            <div class="library-grid" id="libraryGrid"></div>
+            <input type="file" id="libraryFileInput" accept=".pdf" style="display:none" multiple>
         </div>
     </div>
 
-    <!-- Settings Modal -->
+    <!-- ============================================== -->
+    <!-- Page 2: Single-document chat                   -->
+    <!-- ============================================== -->
+    <div class="page page-doc-chat" id="pageDocChat">
+        <aside class="sidebar sidebar-sessions">
+            <div class="sidebar-header-row">
+                <button class="back-btn" id="docBackBtn" title="返回知识库">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <div class="sidebar-header-title">
+                    <div class="header-doc-name" id="docChatFilename">—</div>
+                    <div class="header-doc-meta" id="docChatMeta"></div>
+                </div>
+            </div>
+            <button class="new-session-btn" id="docNewSessionBtn">
+                <i class="bi bi-plus-lg"></i> 新建对话
+            </button>
+            <div class="sessions-section-label">对话历史</div>
+            <div class="sessions-list" id="docSessionsList"></div>
+            <div class="sidebar-footer">
+                <label class="memory-check">
+                    <input type="checkbox" id="docMemoryToggle" checked> 对话记忆
+                </label>
+            </div>
+        </aside>
+        <main class="main-content" id="docChatMain">
+            <div class="chat-container" id="docChatContainer">
+                <!-- Landing: analysis bar (shown when no session selected) -->
+                <div class="analysis-landing" id="docAnalysisLanding"></div>
+                <!-- Chat messages area -->
+                <div class="chat-messages" id="docChatMessages"></div>
+            </div>
+            <div class="input-area" id="docInputArea">
+                <div class="input-container">
+                    <div class="input-wrapper">
+                        <textarea class="chat-input" id="docChatInput" placeholder="输入您的问题..." rows="1"></textarea>
+                    </div>
+                    <button class="send-btn" id="docSendBtn" type="button"><i class="bi bi-send"></i></button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- Page 3: Knowledge-base (multi-doc) chat        -->
+    <!-- ============================================== -->
+    <div class="page page-kb-chat" id="pageKbChat">
+        <aside class="sidebar sidebar-kb">
+            <div class="kb-sidebar-header">
+                <h5><i class="bi bi-chat-square-dots"></i> 知识库问答</h5>
+            </div>
+            <div class="kb-docs-panel">
+                <div class="panel-label">
+                    <span>参与文档</span>
+                    <span class="kb-select-info" id="kbSelectInfo">0 / 0</span>
+                </div>
+                <div class="kb-doc-search-wrap">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="kbDocSearch" placeholder="搜索文档…">
+                </div>
+                <div class="kb-doc-actions">
+                    <button id="kbSelectAllBtn" type="button">全选</button>
+                    <button id="kbClearAllBtn" type="button">清空</button>
+                </div>
+                <div class="kb-doc-list" id="kbDocList"></div>
+            </div>
+            <div class="kb-sessions-panel">
+                <button class="new-session-btn" id="kbNewSessionBtn">
+                    <i class="bi bi-plus-lg"></i> 新建对话
+                </button>
+                <div class="sessions-section-label">对话历史</div>
+                <div class="sessions-list" id="kbSessionsList"></div>
+            </div>
+            <div class="sidebar-footer">
+                <label class="memory-check">
+                    <input type="checkbox" id="kbMemoryToggle" checked> 对话记忆
+                </label>
+            </div>
+        </aside>
+        <main class="main-content" id="kbChatMain">
+            <div class="kb-chat-topbar" id="kbChatTopbar"></div>
+            <div class="chat-container" id="kbChatContainer">
+                <div class="chat-messages" id="kbChatMessages"></div>
+            </div>
+            <div class="input-area">
+                <div class="input-container">
+                    <div class="input-wrapper">
+                        <textarea class="chat-input" id="kbChatInput" placeholder="请先从左侧选择文档，再输入问题..." rows="1"></textarea>
+                    </div>
+                    <button class="send-btn" id="kbSendBtn" type="button"><i class="bi bi-send"></i></button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- Settings Modal                                 -->
+    <!-- ============================================== -->
     <div class="modal fade" id="settingsModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -657,6 +254,28 @@
         </div>
     </div>
 
+    <!-- ============================================== -->
+    <!-- Skills Modal                                   -->
+    <!-- ============================================== -->
+    <div class="modal fade skills-modal" id="skillsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-lightning-charge-fill"></i> Agent Skills</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('skillFileInput').click()"><i class="bi bi-upload"></i> 上传</button>
+                        <button class="btn btn-sm btn-primary" onclick="openSkillEditor()"><i class="bi bi-plus-lg"></i> 新建</button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="skills-grid" id="skillsGrid"></div>
+                    <input type="file" id="skillFileInput" accept=".md" style="display:none">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Skill Editor Modal -->
     <div class="modal fade skill-editor-modal" id="skillEditorModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -676,7 +295,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">描述</label>
-                        <input type="text" class="form-control" id="skillEditorDesc" placeholder="简短描述此 Skill 的功能">
+                        <input type="text" class="form-control" id="skillEditorDesc" placeholder="简短描述">
                     </div>
                     <div class="mb-3">
                         <label class="form-label d-flex justify-content-between align-items-center">
@@ -708,6 +327,30 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
-    <script src="/static/js/app.js"></script>
+    <script src="/static/js/app.js?v={{ assets_version }}"></script>
+    <script>
+        // Hard fallback: if for any reason app.js failed to attach nav handlers,
+        // this keeps the top tabs working so the user isn't stuck on a dead page.
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.querySelectorAll('.nav-tab').forEach(btn => {
+                    if (btn.dataset._fallbackBound) return;
+                    btn.dataset._fallbackBound = '1';
+                    btn.addEventListener('click', () => {
+                        const page = btn.dataset.page;
+                        document.querySelectorAll('.nav-tab').forEach(t =>
+                            t.classList.toggle('active', t.dataset.page === page));
+                        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                        const id = { 'library': 'pageLibrary', 'doc-chat': 'pageDocChat', 'kb-chat': 'pageKbChat' }[page];
+                        const el = id && document.getElementById(id);
+                        if (el) el.classList.add('active');
+                        if (typeof goToPage === 'function') {
+                            try { goToPage(page); } catch (_) { }
+                        }
+                    }, { capture: true });
+                });
+            }, 500);
+        });
+    </script>
 </body>
 </html>
