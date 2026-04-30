@@ -7,8 +7,9 @@ A chat interface for PDF document QA with PageIndex RAG support
 
 import os
 import logging
+import time
 import json
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO
 
@@ -43,10 +44,13 @@ app.register_blueprint(api_bp, url_prefix='/api')
 from routes.socket_handlers import register_socket_events
 register_socket_events(socketio)
 
+# A per-process version string used for cache-busting the static bundle.
+ASSETS_VERSION = str(int(time.time()))
+
 # Serve frontend
 @app.route('/')
 def index():
-    return send_from_directory(app.template_folder, 'index.html')
+    return render_template('index.html', assets_version=ASSETS_VERSION)
 
 # Serve static files through /api/static to work through proxies
 @app.route('/api/static/<path:filename>')
