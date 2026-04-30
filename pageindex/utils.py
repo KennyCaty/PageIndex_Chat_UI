@@ -612,11 +612,44 @@ async def generate_node_summary(node, model=None):
     return response
 
 
-async def generate_summaries_for_structure(structure, model=None):
+async def generate_summaries_for_structure(structure, model=None, progress_callback=None):
+    """Generate per-node summaries concurrently.
+
+    If `progress_callback` is provided, it will be invoked as
+    `progress_callback(done, total)` each time a node summary finishes —
+    enabling real-time progress reporting. The callback may be sync or async.
+    """
     nodes = structure_to_list(structure)
-    tasks = [generate_node_summary(node, model=model) for node in nodes]
-    summaries = await asyncio.gather(*tasks)
-    
+    total = len(nodes)
+
+    async def _run(i, node):
+        summary = await generate_node_summary(node, model=model)
+        return i, summary
+
+    tasks = [asyncio.create_task(_run(i, n)) for i, n in enumerate(nodes)]
+    summaries = [None] * total
+    done = 0
+
+    if progress_callback:
+        try:
+            result = progress_callback(0, total)
+            if asyncio.iscoroutine(result):
+                await result
+        except Exception:
+            pass
+
+    for coro in asyncio.as_completed(tasks):
+        i, summary = await coro
+        summaries[i] = summary
+        done += 1
+        if progress_callback:
+            try:
+                result = progress_callback(done, total)
+                if asyncio.iscoroutine(result):
+                    await result
+            except Exception:
+                pass
+
     for node, summary in zip(nodes, summaries):
         node['summary'] = summary
     return structure

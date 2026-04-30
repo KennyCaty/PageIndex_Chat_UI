@@ -1058,7 +1058,7 @@ async def tree_parser(page_list, opt, doc=None, logger=None):
     return toc_tree
 
 
-def page_index_main(doc, opt=None):
+def page_index_main(doc, opt=None, summary_progress_callback=None):
     logger = JsonLogger(doc)
     
     is_valid_pdf = (
@@ -1083,7 +1083,10 @@ def page_index_main(doc, opt=None):
         if opt.if_add_node_summary == 'yes':
             if opt.if_add_node_text == 'no':
                 add_node_text(structure, page_list)
-            await generate_summaries_for_structure(structure, model=opt.model)
+            await generate_summaries_for_structure(
+                structure, model=opt.model,
+                progress_callback=summary_progress_callback,
+            )
             if opt.if_add_node_text == 'no':
                 remove_structure_text(structure)
             if opt.if_add_doc_description == 'yes':
