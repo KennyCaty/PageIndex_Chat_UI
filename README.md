@@ -42,6 +42,12 @@
 
 ---
 
+## UI 界面
+![ui](image/readme/UI.png)
+![kb_chat](image/readme/kb_chat.png)
+
+---
+
 ## ✨ 核心特性
 
 ### 多工具 Agent
